@@ -76,7 +76,7 @@ pipeline {
 
         }
 
-        stage('Serve Model') {
+        stage('Test and Serve Model') {
 
             steps {
 
@@ -97,6 +97,9 @@ pipeline {
                         curl -X POST "http://127.0.0.1:9000/predict" ^
                         -H "Content-Type: application/json" ^
                         -d @artifacts/test_payload.json
+
+                        echo "--- POST-CLEANUP: Stopping Test Server ---"
+                        FOR /F "tokens=5" %%a IN ('netstat -aon ^| find ":9000" ^| find "LISTENING"') DO taskkill /f /pid %%a
                         
                      '''
                 }
