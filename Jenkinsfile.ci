@@ -1,0 +1,144 @@
+pipeline {
+
+    agent {
+
+        node {
+
+            label 'mlops_agent_1'
+
+        }
+
+    }
+
+    stages {
+
+        stage('Initialize') {
+
+            steps {
+
+                script {
+
+                    // Install necessary python packages
+
+                    bat "pip install -r requirements.txt"
+
+                }
+
+            }
+
+        }
+
+        stage('Load and Preprocess Data') {
+
+            steps {
+
+                script { 
+
+                    // Run data loading script
+
+                    bat "python data_loading.py" 
+
+                }
+
+            }
+
+        }
+
+        stage('Train Model') {
+
+            steps {
+
+                script {
+
+                    // Run model training script
+
+                    bat "python model_training.py"
+
+                }
+
+            }
+
+        }
+
+        stage('Evaluate Model') {
+
+            steps {
+
+                script {
+
+                    // Run model training script
+
+                    bat "python model_evaluation.py"
+
+                }
+
+            }
+
+        }
+
+        stage('Serve Model') {
+
+            steps {
+
+                script {
+
+                    // Run model training script
+                    bat '''
+                        echo "Starting Server"
+                        start /B python model_serving.py
+                        
+                        echo "Waiting for server to initialize ..."
+                        ping -n 11 127.0.0.1 >nul
+                        
+                        echo "Creating Json Payload File..."
+                        echo {"features":[13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]} > artifacts/test_payload.json
+                        
+                        echo "Testing Endpoint"
+                        curl -X POST "http://127.0.0.1:9000/predict" ^
+                        -H "Content-Type: application/json" ^
+                        -d @artifacts/test_payload.json
+                        
+                     '''
+                }
+
+            }
+
+        }
+        
+        stage('Archive Artifacts') {
+            steps {
+                // Archive here so the file exists befor the next stage starts
+                archiveArtifacts artifacts: 'artifacts/*.pkl', fingerprint: true
+            }
+        }
+
+        stage('Deploy Model') {
+
+            steps{
+
+                script {
+
+                    // Trigger another Jenkins Job for model serving
+
+                    build job: 'ModelServingPipeline', wait: false
+
+                }
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            echo 'Pipeline Execution Complete'
+
+        }
+
+    }
+
+}
+

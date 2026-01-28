@@ -1,0 +1,22 @@
+pipeline {
+    agent {
+        node {
+            label 'mlops_agent_1'
+        } 
+    }
+    stages {
+        stage('Copy Artifacts') {
+            steps {
+                copyArtifacts projectName: 'MLOPS_CI_CD', selector: upstream()
+            }
+        }
+        stage('Start FastAPI Server') {
+            steps {
+                script {
+                    bat 'python model_serving.py'
+                }
+            }
+        }
+    
+    }
+}
