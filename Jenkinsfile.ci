@@ -120,7 +120,7 @@ pipeline {
 
                     // Trigger another Jenkins Job for model serving
 
-                    build job: 'ModelServingPipeline', wait: false
+                    build job: 'ModelServingPipeline_git', wait: false
 
                 }
 
